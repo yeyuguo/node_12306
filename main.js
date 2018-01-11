@@ -44,7 +44,7 @@ let questions = [
 	{
 		type: 'input',
 		name: 'time',
-		message: '输入日期-time(如:2017-01-27)：',
+		message: '输入车票日期-time(如:2018-01-27)：',
 		validate(input) {
 			let re = /[\d]{4}-[\d]{1,2}-[\d]{1,2}/ig;
 			if (input.match(re)) {
@@ -159,7 +159,15 @@ let questions = [
 		validate(input) {
 			return true;
 		}
-	}
+	},
+	{
+		type: 'input',
+		name: 'mail_type',
+		message: '输入邮箱服务提供者(默认是163邮箱,暂由QQ和163,可填写 QQ或qq或163来 选择)：',
+		validate(input) {
+			return true;
+		}
+	},
 ];
 function getLeftTicketUrl(callback) {
 	request.get("https://kyfw.12306.cn/otn/leftTicket/init", (e, r, b) => {
@@ -194,6 +202,7 @@ fs.readFile('config.json', 'utf-8', function (err, data) {
 			answer.train_num = answer.train_num.split('|');
 			answer.ticket_type = answer.ticket_type ? '0x00' : 'ADULT';
 			answer.receive_mail = answer.receive_mail || answer.your_mail;
+			answer.mail_type = answer.mail_type
 			config = answer;
 			fs.writeFile('config.json', JSON.stringify(config));
 			var rule = new schedule.RecurrenceRule();
@@ -301,8 +310,10 @@ function queryTickets(config) {
 	var req = https.get(options, function (res) {
 		var data = '';
 		/*设置邮箱信息*/
+		var mail_support = config.mail_type == ('qq'||'QQ') ? 'smtp.163.com' : 'smtp.qq.com'
 		var transporter = nodemailer.createTransport({
-			host: "smtp.163.com",//邮箱的服务器地址，如果你要换其他类型邮箱（如QQ）的话，你要去找他们对应的服务器，
+			// host: "smtp.163.com",//邮箱的服务器地址，如果你要换其他类型邮箱（如QQ）的话，你要去找他们对应的服务器，
+			host: mail_support,//邮箱的服务器地址，如果你要换其他类型邮箱（如QQ）的话，你要去找他们对应的服务器，
 			secureConnection: true,
 			port: 465,//端口，这些都是163给定的，自己到网上查163邮箱的服务器信息
 			auth: {
